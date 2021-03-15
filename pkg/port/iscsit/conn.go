@@ -19,6 +19,7 @@ package iscsit
 import (
 	"io"
 	"net"
+	"os"
 	"sort"
 	"sync"
 
@@ -230,6 +231,15 @@ func (conn *iscsiConnection) buildRespPackage(oc OpCode, task *iscsiTask) error 
 			conn.resp.RawData = util.MarshalKVText(negoKeys)
 		}
 		conn.txTask = nil
+		// FIXME: hack just to test how redirection works
+		conn.resp.StatusClass = 0x01  //REDIRECT
+		conn.resp.StatusDetail = 0x01 //TEMPORARY
+
+		redirect := os.Getenv("GOTGT_REDIRECT")
+		if redirect != "" {
+			conn.resp.RawData = util.MarshalKVText([]util.KeyValue{{Key: "TargetAddress", Value: redirect}})
+		}
+
 	}
 
 	return nil
